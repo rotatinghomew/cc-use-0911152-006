@@ -1,0 +1,158 @@
+{
+  "scenario": "跨境流域临灾数据融合与预警复盘系统",
+  "synthetic": true,
+  "records": [
+    {
+      "record_id": "hazard_window-001",
+      "payload": {
+        "station_id": "station_id-0",
+        "rainfall_mm": 13.9,
+        "water_level_m": 15.8,
+        "flow_rate": 0.58,
+        "gate_opening": 0.69,
+        "forecast_horizon_h": 21.5,
+        "sensor_age_min": 23.4,
+        "quality_flag": 0.25,
+        "upstream_delay": 27.2,
+        "population_exposure": 29.1,
+        "delivery_channels": 31.0,
+        "ack_rate": 0.69
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-002",
+      "payload": {
+        "station_id": "station_id-1",
+        "rainfall_mm": 17.6,
+        "water_level_m": 19.5,
+        "flow_rate": 0.69,
+        "gate_opening": 0.8,
+        "forecast_horizon_h": 25.2,
+        "sensor_age_min": 27.1,
+        "quality_flag": 0.36,
+        "upstream_delay": 30.9,
+        "population_exposure": 32.8,
+        "delivery_channels": 34.7,
+        "ack_rate": 0.8
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-003",
+      "payload": {
+        "station_id": "station_id-2",
+        "rainfall_mm": 21.3,
+        "water_level_m": 23.2,
+        "flow_rate": 0.8,
+        "gate_opening": 0.91,
+        "forecast_horizon_h": 28.9,
+        "sensor_age_min": 30.8,
+        "quality_flag": 0.47,
+        "upstream_delay": 34.6,
+        "population_exposure": 36.5,
+        "delivery_channels": 38.4,
+        "ack_rate": 0.91
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-004",
+      "payload": {
+        "station_id": "station_id-3",
+        "rainfall_mm": 25.0,
+        "water_level_m": 26.9,
+        "flow_rate": 0.91,
+        "gate_opening": 0.25,
+        "forecast_horizon_h": 32.6,
+        "sensor_age_min": 34.5,
+        "quality_flag": 0.58,
+        "upstream_delay": 38.3,
+        "population_exposure": 40.2,
+        "delivery_channels": 42.1,
+        "ack_rate": 0.25
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-005",
+      "payload": {
+        "station_id": "station_id-4",
+        "rainfall_mm": 28.7,
+        "water_level_m": 30.6,
+        "flow_rate": 0.25,
+        "gate_opening": 0.36,
+        "forecast_horizon_h": 36.3,
+        "sensor_age_min": 38.2,
+        "quality_flag": 0.69,
+        "upstream_delay": 42.0,
+        "population_exposure": 43.9,
+        "delivery_channels": 45.8,
+        "ack_rate": 0.36
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-006",
+      "payload": {
+        "station_id": "station_id-0",
+        "rainfall_mm": 32.4,
+        "water_level_m": 34.3,
+        "flow_rate": 0.36,
+        "gate_opening": 0.47,
+        "forecast_horizon_h": 40.0,
+        "sensor_age_min": 41.9,
+        "quality_flag": 0.8,
+        "upstream_delay": 45.7,
+        "population_exposure": 47.6,
+        "delivery_channels": 49.5,
+        "ack_rate": 0.47
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-007",
+      "payload": {
+        "station_id": "station_id-1",
+        "rainfall_mm": 36.1,
+        "water_level_m": 38.0,
+        "flow_rate": 0.47,
+        "gate_opening": 0.58,
+        "forecast_horizon_h": 43.7,
+        "sensor_age_min": 45.6,
+        "quality_flag": 0.91,
+        "upstream_delay": 49.4,
+        "population_exposure": 51.3,
+        "delivery_channels": 53.2,
+        "ack_rate": 0.58
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "hazard_window-008",
+      "payload": {
+        "station_id": "station_id-2",
+        "rainfall_mm": 39.8,
+        "water_level_m": 41.7,
+        "flow_rate": 0.58,
+        "gate_opening": 0.69,
+        "forecast_horizon_h": 47.4,
+        "sensor_age_min": 49.3,
+        "quality_flag": 0.25,
+        "upstream_delay": 53.1,
+        "population_exposure": 55.0,
+        "delivery_channels": 56.9,
+        "ack_rate": 0.69
+      },
+      "state": "observing",
+      "source": "synthetic-local-acceptance"
+    }
+  ]
+}

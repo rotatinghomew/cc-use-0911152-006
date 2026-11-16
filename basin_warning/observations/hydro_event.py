@@ -161,6 +161,7 @@ class Decision:
     rule_results: tuple[RuleResult, ...]
     metrics: dict[str, float]
     decided_at: str = field(default_factory=utc_now)
+    rule_basis: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "record_id", identifier(self.record_id))
@@ -169,15 +170,20 @@ class Decision:
             raise ContractError("outcome is required")
         if not self.reasons:
             raise ContractError("decision needs reasons")
+        if self.rule_basis is not None and not isinstance(self.rule_basis, Mapping):
+            raise ContractError("rule basis must be an object")
 
     @property
     def fingerprint(self) -> str:
         return stable_hash(self.as_dict())
 
     def as_dict(self) -> dict[str, Any]:
-        return {"record_id": self.record_id, "outcome": self.outcome, "score": self.score,
+        body = {"record_id": self.record_id, "outcome": self.outcome, "score": self.score,
                 "reasons": list(self.reasons), "rules": [item.as_dict() for item in self.rule_results],
                 "metrics": self.metrics, "decided_at": self.decided_at}
+        if self.rule_basis is not None:
+            body["rule_basis"] = dict(self.rule_basis)
+        return body
 
 
 def require_fields(record: DomainRecord, fields: Iterable[str] = REQUIRED_FIELDS) -> list[str]:

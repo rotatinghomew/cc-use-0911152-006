@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import json
 import sqlite3
-from typing import Any
+from typing import Any, Mapping
 
 from basin_warning.observations.hydro_event import ContractError, utc_now
 
@@ -22,6 +23,11 @@ def prepare_notifications(connection: sqlite3.Connection) -> None:
         issued_at TEXT NOT NULL, delivered_at TEXT, acknowledged_at TEXT,
         FOREIGN KEY(reach_id) REFERENCES river_reaches(reach_id)
     )""")
+    # Idempotent migration: older databases lack the rule-basis column.  Existing
+    # rows keep a NULL basis and remain traceable under their original rules.
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(alert_notices)")}
+    if "rule_basis_json" not in columns:
+        connection.execute("ALTER TABLE alert_notices ADD COLUMN rule_basis_json TEXT")
 
 
 def register_reach(connection: sqlite3.Connection, reach_id: str,
@@ -52,7 +58,8 @@ def assign_station(connection: sqlite3.Connection, station_id: str, reach_id: st
 
 
 def issue_notice(connection: sqlite3.Connection, notice_id: str, reach_id: str,
-                 observation_id: str, observation_version: int) -> dict[str, Any]:
+                 observation_id: str, observation_version: int,
+                 rule_basis: Mapping[str, Any] | None = None) -> dict[str, Any]:
     prepare_notifications(connection)
     if not notice_id.strip() or not connection.execute("SELECT 1 FROM river_reaches WHERE reach_id=?", (reach_id,)).fetchone():
         raise ContractError("notice requires known reach")
@@ -60,14 +67,20 @@ def issue_notice(connection: sqlite3.Connection, notice_id: str, reach_id: str,
                                   (observation_id, observation_version)).fetchone()
     if not evidence:
         raise ContractError("notice observation version is unknown")
+    basis_json = json.dumps(dict(rule_basis), ensure_ascii=False, sort_keys=True) if rule_basis else None
     old = connection.execute("SELECT * FROM alert_notices WHERE notice_id=?", (notice_id,)).fetchone()
     if old:
         if (old["reach_id"], old["observation_id"], old["observation_version"]) != (
                 reach_id, observation_id, observation_version):
             raise ContractError("notice identity cannot be reassigned")
         return dict(old)
-    connection.execute("INSERT INTO alert_notices VALUES(?,?,?,?,?, ?,NULL,NULL)",
-                       (notice_id, reach_id, observation_id, observation_version, "pending", utc_now()))
+    connection.execute(
+        "INSERT INTO alert_notices(notice_id,reach_id,observation_id,observation_version,status,"
+        "issued_at,delivered_at,acknowledged_at,rule_basis_json)"
+        " VALUES(?,?,?,?,?, ?,NULL,NULL,?)",
+        (notice_id, reach_id, observation_id, observation_version, "pending",
+         utc_now(), basis_json),
+    )
     return dict(connection.execute("SELECT * FROM alert_notices WHERE notice_id=?", (notice_id,)).fetchone())
 
 

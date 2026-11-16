@@ -9,6 +9,7 @@ from typing import Any, Iterator, Mapping, Sequence
 
 from basin_warning.observations.hydro_event import Decision, DomainRecord, ContractError, canonical_json, stable_hash, utc_now
 from basin_warning.alerts.notification_ledger import prepare_notifications, register_reach, assign_station, issue_notice, update_notice, reach_notices
+from basin_warning.replay.rule_package import baseline_package
 
 
 SCHEMA = """
@@ -94,9 +95,27 @@ class Repository:
         with self.transaction() as connection:
             assign_station(connection, station_id, reach_id)
 
-    def issue_notice(self, notice_id: str, reach_id: str, observation_id: str, version: int) -> dict[str, Any]:
+    def issue_notice(self, notice_id: str, reach_id: str, observation_id: str, version: int,
+                     rule_basis: Mapping[str, Any] | None = None) -> dict[str, Any]:
         with self.transaction() as connection:
-            return issue_notice(connection, notice_id, reach_id, observation_id, version)
+            basis = rule_basis
+            if basis is None:
+                basis = self._decision_rule_basis(connection, observation_id)
+            return issue_notice(connection, notice_id, reach_id, observation_id, version, basis)
+
+    @staticmethod
+    def _decision_rule_basis(connection: sqlite3.Connection, record_id: str) -> dict[str, Any] | None:
+        """Resolve the rule basis a notice must inherit: the basis of the latest
+        decision for this observation, falling back to the production baseline."""
+        row = connection.execute(
+            "SELECT decision_json FROM decisions WHERE record_id=? ORDER BY decided_at DESC, rowid DESC LIMIT 1",
+            (record_id,),
+        ).fetchone()
+        if row:
+            decision_body = json.loads(row["decision_json"])
+            if decision_body.get("rule_basis"):
+                return dict(decision_body["rule_basis"])
+        return baseline_package().basis()
 
     def update_notice(self, notice_id: str, status: str) -> dict[str, Any]:
         with self.transaction() as connection:
@@ -263,6 +282,23 @@ class Repository:
         with self.connect() as connection:
             rows = connection.execute("SELECT decision_json FROM decisions ORDER BY record_id,decided_at").fetchall()
         return [json.loads(row[0]) for row in rows]
+
+    def latest_decision(self, record_id: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT decision_json FROM decisions WHERE record_id=? ORDER BY decided_at DESC, rowid DESC LIMIT 1",
+                (record_id,),
+            ).fetchone()
+        return json.loads(row["decision_json"]) if row else None
+
+    def active_rule_basis(self) -> dict[str, Any]:
+        """The rule basis currently governing this live repository.
+
+        The live store itself never runs trial candidates; without an externally
+        enabled package this is always the production baseline.  Trial ownership
+        of rule activation lives in the separate TrialStore.
+        """
+        return baseline_package().basis()
 
     def event_rows(self) -> list[dict[str, Any]]:
         with self.connect() as connection:

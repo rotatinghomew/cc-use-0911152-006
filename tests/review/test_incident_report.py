@@ -138,6 +138,14 @@ class WorkflowTests(unittest.TestCase):
         second = advance_for_outcome(self.record, decision)
         self.assertEqual(first, second)
 
+    def test_decision_carries_rule_basis_when_supplied(self):
+        basis = {"package_id": "candidate-x", "version": 2, "fingerprint": "b" * 64}
+        decision = decide(self.record, rule_basis=basis)
+        self.assertEqual(decision.rule_basis, basis)
+        self.assertIn("rule_basis", decision.as_dict())
+        # Default decisions carry no explicit basis (baseline is implicit).
+        self.assertIsNone(decide(self.record).rule_basis)
+
 
 class EndToEndTests(unittest.TestCase):
     def setUp(self):

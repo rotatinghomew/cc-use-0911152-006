@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -36,3 +37,31 @@ class NotificationLedgerTests(unittest.TestCase):
         self.assertEqual(self.repository.update_notice("pending", "cancelled")["status"], "cancelled")
         with self.assertRaisesRegex(ContractError, "unknown"):
             self.repository.issue_notice("missing", "upstream", "observation-a", 2)
+
+    def test_notice_carries_and_preserves_rule_basis(self):
+        basis = {"package_id": "candidate-balanced", "version": 1,
+                 "fingerprint": "a" * 64}
+        self.repository.issue_notice(
+            "notice-basis", "upstream", "observation-a", 1, rule_basis=basis
+        )
+        stored = self.repository.reach_notices("upstream")
+        notice = next(row for row in stored if row["notice_id"] == "notice-basis")
+        self.assertEqual(json.loads(notice["rule_basis_json"]), basis)
+        # Re-issuing the same notice is idempotent and keeps the original basis.
+        again = self.repository.issue_notice(
+            "notice-basis", "upstream", "observation-a", 1, rule_basis=basis
+        )
+        self.assertEqual(json.loads(again["rule_basis_json"]), basis)
+        self.repository.update_notice("notice-basis", "delivered")
+        delivered = next(row for row in self.repository.reach_notices("upstream")
+                         if row["notice_id"] == "notice-basis")
+        self.assertEqual(delivered["status"], "delivered")
+        self.assertEqual(json.loads(delivered["rule_basis_json"]), basis)
+
+    def test_notice_without_basis_defaults_to_baseline(self):
+        self.repository.issue_notice("notice-default", "upstream", "observation-a", 1)
+        notice = next(row for row in self.repository.reach_notices("upstream")
+                      if row["notice_id"] == "notice-default")
+        self.assertEqual(
+            json.loads(notice["rule_basis_json"])["package_id"], "baseline-rule-package"
+        )

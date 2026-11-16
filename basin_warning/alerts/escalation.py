@@ -1133,7 +1133,8 @@ def guard_report(record: DomainRecord, context: Mapping[str, Any] | None = None)
     return {'passed': sum(item[0] for item in results), 'failed': sum(not item[0] for item in results),
             'messages': [item[1] for item in results]}
 
-def decide(record: DomainRecord, context: Mapping[str, Any] | None = None) -> Decision:
+def decide(record: DomainRecord, context: Mapping[str, Any] | None = None,
+           rule_basis: Mapping[str, Any] | None = None) -> Decision:
     context = context or {}
     rules = evaluate(record, context)
     scorecard = record_score(record, context)
@@ -1149,7 +1150,9 @@ def decide(record: DomainRecord, context: Mapping[str, Any] | None = None) -> De
         outcome = 'reject'
     reasons = (f"score={scorecard['score']:.6f}", f"critical={critical}",
                f"guards={guards['passed']}/{guards['passed'] + guards['failed']}")
-    return Decision(record.record_id, outcome, scorecard['score'], reasons, rules, scorecard['metrics'])
+    basis = dict(rule_basis) if rule_basis else None
+    return Decision(record.record_id, outcome, scorecard['score'], reasons, rules,
+                    scorecard['metrics'], rule_basis=basis)
 
 def advance_for_outcome(record: DomainRecord, decision: Decision) -> DomainRecord:
     current = STATES.index(record.state)

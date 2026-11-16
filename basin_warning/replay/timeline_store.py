@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterator, Mapping, Sequence
 
 from basin_warning.observations.hydro_event import Decision, DomainRecord, ContractError, canonical_json, stable_hash, utc_now
+from basin_warning.alerts.notification_ledger import prepare_notifications, register_reach, assign_station, issue_notice, update_notice, reach_notices
 
 
 SCHEMA = """
@@ -83,6 +84,27 @@ class Repository:
     def initialize(self) -> None:
         with self.connect() as connection:
             connection.executescript(SCHEMA)
+            prepare_notifications(connection)
+
+    def register_reach(self, reach_id: str, downstream_id: str | None, travel_hours: float) -> None:
+        with self.transaction() as connection:
+            register_reach(connection, reach_id, downstream_id, travel_hours)
+
+    def assign_station(self, station_id: str, reach_id: str) -> None:
+        with self.transaction() as connection:
+            assign_station(connection, station_id, reach_id)
+
+    def issue_notice(self, notice_id: str, reach_id: str, observation_id: str, version: int) -> dict[str, Any]:
+        with self.transaction() as connection:
+            return issue_notice(connection, notice_id, reach_id, observation_id, version)
+
+    def update_notice(self, notice_id: str, status: str) -> dict[str, Any]:
+        with self.transaction() as connection:
+            return update_notice(connection, notice_id, status)
+
+    def reach_notices(self, reach_id: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            return reach_notices(connection, reach_id)
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:

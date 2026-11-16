@@ -65,6 +65,9 @@ class Application:
         return {"snapshot": self.repository.snapshot(), "records": [record.__dict__ for record in self.repository.list_records()],
                 "decisions": self.repository.decision_rows()}
 
+    def reach_notices(self, reach_id: str) -> list[dict[str, Any]]:
+        return self.repository.reach_notices(reach_id)
+
 
 def load_fixture(path: str | Path) -> dict[str, Any]:
     try:
